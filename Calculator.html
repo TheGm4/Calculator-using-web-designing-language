@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Calculator</title>
+    <link href="styles.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .calculator {
+            width: 360px;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            background-color: #2d3748;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .display {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            text-align: right;
+            background-color: #374151;
+            color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            word-wrap: break-word;
+            min-height: 3rem;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        .button {
+            padding: 1rem 0;
+            font-size: 1.5rem;
+            text-align: center;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            background-color: #4a5568;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:hover {
+            background-color: #718096;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .number, .decimal {
+            background-color: #6b7280;
+        }
+
+        .number:hover, .decimal:hover {
+            background-color: #9ca3af;
+        }
+
+        .operator {
+            background-color: #f59e0b;
+        }
+
+        .operator:hover {
+            background-color: #ed8936;
+        }
+
+        .equals {
+            background-color: #48bb78;
+        }
+
+        .equals:hover {
+            background-color: #38a169;
+        }
+
+        .clear, .undo {
+            background-color: #e53e3e;
+        }
+
+        .clear:hover, .undo:hover {
+            background-color: #c53030;
+        }
+
+        .clear {
+            grid-column: span 2;
+        }
+
+        .undo {
+            grid-column: span 2;
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        .func {
+            background-color: #a0aec0;
+        }
+
+        .func:hover {
+            background-color: #718096;
+        }
+
+        .select-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .select-box {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            background-color: #fff;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+        }
+
+        .select-box:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+
+        .select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            background-color: #fff;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+            overflow: auto;
+            max-height: 200px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out, transform 0.15s ease-in-out;
+        }
+
+        .select-options.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .select-options li {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            color: #4a5568;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .select-options li:hover {
+            background-color: #f7fafc;
+            color: #1a202c;
+        }
+
+        .select-box-wrapper {
+            position: relative;
+        }
+
+        .select-box-wrapper::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 0.75rem;
+            transform: translateY(-50%);
+            width: 0.625rem;
+            height: 0.625rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: contain;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="select-container">
+            <select id="formulaSelect" class="select-box">
+                <option value="basic">Basic</option>
+                <option value="temperature">Temperature Conversion</option>
+                <option value="area">Area Calculation</option>
+                <option value="scientific">Scientific</option>
+            </select>
+            <ul id="formulaOptions" class="select-options">
+                <li data-value="basic">Basic</li>
+                <li data-value="temperature">Temperature Conversion</li>
+                <li data-value="area">Area Calculation</li>
+                <li data-value="scientific">Scientific</li>
+            </ul>
+        </div>
+        <div class="buttons" id="basicButtons">
+            <button class="button clear" onclick="clearDisplay()">C</button>
+            <button class="button undo" onclick="undo()">Undo</button>
+            <button class="button number" onclick="appendNumber('7')">7</button>
+            <button class="button number" onclick="appendNumber('8')">8</button>
+            <button class="button number" onclick="appendNumber('9')">9</button>
+            <button class="button operator" onclick="appendOperator('/')">÷</button>
+            <button class="button number" onclick="appendNumber('4')">4</button>
+            <button class="button number" onclick="appendNumber('5')">5</button>
+            <button class="button number" onclick="appendNumber('6')">6</button>
+            <button class="button operator" onclick="appendOperator('*')">×</button>
+            <button class="button number" onclick="appendNumber('1')">1</button>
+            <button class="button number" onclick="appendNumber('2')">2</button>
+            <button class="button number" onclick="appendNumber('3')">3</button>
+            <button class="button operator" onclick="appendOperator('-')">-</button>
+            <button class="button number zero" onclick="appendNumber('0')">0</button>
+            <button class="button decimal" onclick="appendDecimal()">.</button>
+            <button class="button equals" onclick="calculate()">=</button>
+            <button class="button operator" onclick="appendOperator('+')">+</button>
+        </div>
+
+        <div class="buttons" id="temperatureButtons" style="display: none;">
+            <button class="button clear" onclick="clearDisplay()">C</button>
+            <button class="button undo" onclick="undo()">Undo</button>
+            <button class="button func" onclick="convertTemperature('C', 'F')">C to F</button>
+            <button class="button func" onclick="convertTemperature('C', 'K')">C to K</button>
+            <button class="button number" onclick="appendNumber('7')">7</button>
+            <button class="button number" onclick="appendNumber('8')">8</button>
+            <button class="button number" onclick="appendNumber('9')">9</button>
+            <button class="button func" onclick="convertTemperature('F', 'C')">F to C</button>
+            <button class="button number" onclick="appendNumber('4')">4</button>
+            <button class="button number" onclick="appendNumber('5')">5</button>
+            <button class="button number" onclick="appendNumber('6')">6</button>
+            <button class="button func" onclick="convertTemperature('F', 'K')">F to K</button>
+            <button class="button number" onclick="appendNumber('1')">1</button>
+            <button class="button number" onclick="appendNumber('2')">2</button>
+            <button class="button number" onclick="appendNumber('3')">3</button>
+            <button class="button func" onclick="convertTemperature('K', 'C')">K to C</button>
+            <button class="button number zero" onclick="appendNumber('0')">0</button>
+            <button class="button decimal" onclick="appendDecimal()">.</button>
+            <button class="button func" onclick="convertTemperature('K', 'F')">K to F</button>
+        </div>
+
+        <div class="buttons" id="areaButtons" style="display: none;">
+            <button class="button clear" onclick="clearDisplay()">C</button>
+            <button class="button undo" onclick="undo()">Undo</button>
+            <button class="button func" onclick="calculateArea('square')">Square</button>
+            <button class="button func" onclick="calculateArea('rectangle')">Rectangle</button>
+            <button class="button number" onclick="appendNumber('7')">7</button>
+            <button class="button number" onclick="appendNumber('8')">8</button>
+            <button class="button number" onclick="appendNumber('9')">9</button>
+            <button class="button func" onclick="calculateArea('circle')">Circle</button>
+            <button class="button number" onclick="appendNumber('4')">4</button>
+            <button class="button number" onclick="appendNumber('5')">5</button>
+            <button class="button number" onclick="appendNumber('6')">6</button>
+            <button class="button func" onclick="calculateArea('triangle')">Triangle</button>
+            <button class="button number" onclick="appendNumber('1')">1</button>
+            <button class="button number" onclick="appendNumber('2')">2</button>
+            <button class="button number" onclick="appendNumber('3')">3</button>
+            <button class="button func" onclick="calculateArea('parallelogram')">Parallelogram</button>
+            <button class="button number zero" onclick="appendNumber('0')">0</button>
+            <button class="button decimal" onclick="appendDecimal()">.</button>
+            <button class="button func" onclick="calculateArea('trapezoid')">Trapezoid</button>
+        </div>
+
+        <div class="buttons" id="scientificButtons" style="display: none;">
+            <button class="button clear" onclick="clearDisplay()">C</button>
+            <button class="button undo" onclick="undo()">Undo</button>
+            <button class="button func" onclick="appendOperator('Math.PI')">π</button>
+            <button class="button func" onclick="appendOperator('Math.E')">e</button>
+            <button class="button number" onclick="appendNumber('7')">7</button>
+            <button class="button number" onclick="appendNumber('8')">8</button>
+            <button class="button number" onclick="appendNumber('9')">9</button>
+            <button class="button func" onclick="calculateScientific('sin')">sin</button>
+            <button class="button number" onclick="appendNumber('4')">4</button>
+            <button class="button number" onclick="appendNumber('5')">5</button>
+            <button class="button number" onclick="appendNumber('6')">6</button>
+            <button class="button func" onclick="calculateScientific('cos')">cos</button>
+            <button class="button number" onclick="appendNumber('1')">1</button>
+            <button class="button number" onclick="appendNumber('2')">2</button>
+            <button class="button number" onclick="appendNumber('3')">3</button>
+            <button class="button func" onclick="calculateScientific('tan')">tan</button>
+            <button class="button number zero" onclick="appendNumber('0')">0</button>
+            <button class="button decimal" onclick="appendDecimal()">.</button>
+            <button class="button func" onclick="calculateScientific('log')">log</button>
+            <button class="button func" onclick="calculateScientific('ln')">ln</button>
+            <button class="button func" onclick="calculateScientific('sqrt')">√</button>
+            <button class="button func" onclick="calculatePower()">x^y</button>
+            <button class="button func" onclick="calculateScientific('pow2')">x^2</button>
+            <button class="button func" onclick="calculateScientific('10pow')">10^x</button>
+            <button class="button func" onclick="calculateFactorial()">n!</button>
+            <button class="button" onclick="appendNumber('(')">(</button>
+            <button class="button" onclick="appendNumber(')')">)</button>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let currentInput = '0';
+        let previousInputs = [];
+        let currentFormula = 'basic';
+        const basicButtons = document.getElementById('basicButtons');
+        const temperatureButtons = document.getElementById('temperatureButtons');
+        const areaButtons = document.getElementById('areaButtons');
+        const scientificButtons = document.getElementById('scientificButtons');
+        const formulaSelect = document.getElementById('formulaSelect');
+        const formulaOptionsList = document.getElementById('formulaOptions');
+
+        const formulaOptions = [
+            { value: 'basic', label: 'Basic' },
+            { value: 'temperature', label: 'Temperature Conversion' },
+            { value: 'area', label: 'Area Calculation' },
+            { value: 'scientific', label: 'Scientific' },
+        ];
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function appendNumber(number) {
+            if (currentInput === '0' || currentInput === 'Infinity' || currentInput === '-Infinity' || isNaN(parseFloat(currentInput))) {
+                currentInput = number;
+            } else {
+                currentInput += number;
+            }
+            previousInputs.push(currentInput);
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            const lastNumber = currentInput.split(/[\+\-\*\/]/).pop();
+            if (!lastNumber.includes('.')) {
+                currentInput += '.';
+                previousInputs.push(currentInput);
+                updateDisplay();
+            }
+        }
+
+        function appendOperator(operator) {
+            if (currentInput !== '0' && currentInput !== '-' && !isNaN(parseFloat(currentInput)) && !['+', '-', '*', '/', 'Math.PI', 'Math.E'].includes(currentInput.slice(-1))) {
+                previousInputs.push(currentInput);
+                currentInput += operator;
+                updateDisplay();
+            } else if (['+', '-', '*', '/'].includes(currentInput.slice(-1)) && operator !== currentInput.slice(-1)) {
+                currentInput = currentInput.slice(0, -1) + operator;
+                previousInputs.push(currentInput);
+                updateDisplay();
+            } else if (currentInput === '0' && operator === '-') {
+                currentInput = '-';
+                previousInputs.push(currentInput);
+                updateDisplay();
+            } else if (['Math.PI', 'Math.E'].includes(operator)) {
+                if (currentInput === '0' || isNaN(parseFloat(currentInput))) {
+                    currentInput = operator;
+                } else {
+                    currentInput += operator;
+                }
+                previousInputs.push(currentInput);
+                updateDisplay();
+            }
+        }
+
+        function calculate() {
+            if (currentInput.length === 0 || ['+', '-', '*', '/'].includes(currentInput.slice(-1))) {
+                return;
+            }
+            try {
+                const result = new Function('return ' + currentInput.replace(/÷/g, '/').replace(/×/g, '*'))();
+                previousInputs.push(currentInput);
+                currentInput = String(result);
+                updateDisplay();
+            } catch (error) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            previousInputs = [];
+            updateDisplay();
+        }
+
+        function undo() {
+            if (previousInputs.length > 0) {
+                previousInputs.pop();
+                currentInput = previousInputs.length > 0 ? previousInputs[previousInputs.length - 1] : '0';
+                updateDisplay();
+            } else {
+                currentInput = '0';
+                updateDisplay();
+            }
+        }
+
+        function convertTemperature(fromUnit, toUnit) {
+            const inputValue = parseFloat(currentInput);
+            if (isNaN(inputValue)) {
+                currentInput = 'Error';
+                updateDisplay();
+                return;
+            }
+
+            let result;
+            if (fromUnit === 'C') {
+                if (toUnit === 'F') {
+                    result = (inputValue * 9/5) + 32;
+                } else if (toUnit === 'K') {
+                    result = inputValue + 273.15;
+                } else {
+                    result = inputValue;
+                }
+            } else if (fromUnit === 'F') {
+                if (toUnit === 'C') {
+                    result = (inputValue - 32) * 5/9;
+                } else if (toUnit === 'K') {
+                    result = (inputValue - 32) * 5/9 + 273.15;
+                } else {
+                    result = inputValue;
+                }
+            } else if (fromUnit === 'K') {
+                if (toUnit === 'C') {
+                    result = inputValue - 273.15;
+                } else if (toUnit === 'F') {
+                    result = (inputValue - 273.15) * 9/5 + 32;
+                } else {
+                    result = inputValue;
+                }
+            }
+
+            currentInput = String(result);
+            previousInputs.push(currentInput);
+            updateDisplay();
+        }
+
+        function calculateArea(shape) {
+            const inputValue = parseFloat(currentInput);
+            if (isNaN(inputValue)) {
+                currentInput = 'Error';
+                updateDisplay();
+                return;
+            }
+            let result;
+            switch (shape) {
+                case 'square':
+                    result = inputValue * inputValue;
+                    break;
+                case 'rectangle':
+                    const length = parseFloat(prompt("Enter the length:"));
+                    if (isNaN(length)) {
+                        currentInput = 'Error';
+                        updateDisplay();
+                        return;
+                    }
+                    result = inputValue * length;
+                    break;
+                case 'circle':
+                    result = Math.PI * inputValue * inputValue;
+                    break;
+                case 'triangle':
+                    const height = parseFloat(prompt("Enter the height:"));
+                    if (isNaN(height)) {
+                        currentInput = 'Error';
+                        updateDisplay();
+                        return;
+                    }
+                    result = 0.5 * inputValue * height;
+                    break;
+                case 'parallelogram':
+                    const pHeight = parseFloat(prompt("Enter the height:"));
+                    if (isNaN(pHeight)) {
+                        currentInput = 'Error';
+                        updateDisplay();
+                        return;
+                    }
+                    result = inputValue * pHeight;
+                    break;
+                case 'trapezoid':
+                    const base2 = parseFloat(prompt("Enter the second base:"));
+                    const heightTrapezoid = parseFloat(prompt("Enter the height:"));
+                    if (isNaN(base2) || isNaN(heightTrapezoid)) {
+                        currentInput = 'Error';
+                        updateDisplay();
+                        return;
+                    }
+                    result = 0.5 * (inputValue + base2) * heightTrapezoid;
+                    break;
+                default:
+                    result = 'Error';
+            }
+            currentInput = String(result);
+            previousInputs.push(currentInput);
+            updateDisplay();
+        }
+
+        function calculateScientific(operation) {
+            const inputValue = parseFloat(currentInput);
+            if (isNaN(inputValue)) {
+                currentInput = 'Error';
+                updateDisplay();
+                return;
+            }
+            let result;
+            switch (operation) {
+                case 'sin':
+                    result = Math.sin(inputValue);
+                    break;
+                case 'cos':
+                    result = Math.cos(inputValue);
+                    break;
+                case 'tan':
+                    result = Math.tan(inputValue);
+                    break;
+                case 'log':
+                    result = Math.log10(inputValue);
+                    break;
+                case 'ln':
+                    result = Math.log(inputValue);
+                    break;
+                case 'sqrt':
+                    result = Math.sqrt(inputValue);
+                    break;
+                case 'pow2':
+                    result = Math.pow(inputValue, 2);
+                    break;
+                case '10pow':
+                    result = Math.pow(10, inputValue);
+                    break;
+                default:
+                    result = 'Error';
+            }
+            currentInput = String(result);
+            previousInputs.push(currentInput);
+            updateDisplay();
+        }
+
+        function calculatePower() {
+            const base = parseFloat(currentInput);
+            if (isNaN(base)) {
+                currentInput = 'Error';
+                updateDisplay();
+                return;
+            }
+            const exponent = parseFloat(prompt("Enter the exponent:"));
+            if (isNaN(exponent)) {
+                currentInput = 'Error';
+                updateDisplay();
+                return;
+            }
+            const result = Math.pow(base, exponent);
+            currentInput = String(result);
+            previousInputs.push(currentInput);
+            updateDisplay();
+        }
+
+        function calculateFactorial() {
+            const inputValue = parseInt(currentInput);
+            if (isNaN(inputValue) || inputValue < 0) {
+                currentInput = 'Error';
+                updateDisplay();
+                return;
+            }
+            let result = 1;
+            for (let i = 2; i <= inputValue; i++) {
+                result *= i;
+            }
+            currentInput = String(result);
+            previousInputs.push(currentInput);
+            updateDisplay();
+        }
+
+        function updateButtonVisibility(selectedFormula) {
+            basicButtons.style.display = 'none';
+            temperatureButtons.style.display = 'none';
+            areaButtons.style.display = 'none';
+            scientificButtons.style.display = 'none';
+
+            switch (selectedFormula) {
+                case 'basic':
+                    basicButtons.style.display = 'grid';
+                    break;
+                case 'temperature':
+                    temperatureButtons.style.display = 'grid';
+                    break;
+                case 'area':
+                    areaButtons.style.display = 'grid';
+                    break;
+                case 'scientific':
+                    scientificButtons.style.display = 'grid';
+                    break;
+                default:
+                    basicButtons.style.display = 'grid';
+            }
+        }
+
+        formulaSelect.addEventListener('change', (event) => {
+            currentFormula = event.target.value;
+            updateButtonVisibility(currentFormula);
+        });
+
+        formulaOptionsList.addEventListener('click', (event) => {
+            if (event.target.tagName === 'LI') {
+                const selectedValue = event.target.dataset.value;
+                currentFormula = selectedValue;
+                formulaSelect.value = selectedValue;
+                updateButtonVisibility(selectedValue);
+                toggleDropdown();
+            }
+        });
+
+        // Initial button visibility
+        updateButtonVisibility(currentFormula);
+
+        // Dropdown functionality
+        const selectContainer = document.querySelector('.select-container');
+        const selectBox = document.querySelector('.select-box');
+        const selectOptions = document.querySelector('.select-options');
+        let isDropdownOpen = false;
+
+        selectBox.addEventListener('click', toggleDropdown);
+
+        function toggleDropdown() {
+            selectOptions.classList.toggle('show');
+            isDropdownOpen = !isDropdownOpen;
+            if (isDropdownOpen) {
+                selectBox.focus();
+            }
+        }
+
+        document.addEventListener('click', (event) => {
+            if (!selectContainer.contains(event.target) && !selectOptions.contains(event.target)) {
+                selectOptions.classList.remove('show');
+                isDropdownOpen = false;
+            }
+        });
+
+        // Keyboard navigation
+        selectBox.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === 'Space') {
+                toggleDropdown();
+            } else if (event.key === 'Escape') {
+                selectOptions.classList.remove('show');
+                isDropdownOpen = false;
+            }
+        });
+    </script>
+</body>
+</html>
